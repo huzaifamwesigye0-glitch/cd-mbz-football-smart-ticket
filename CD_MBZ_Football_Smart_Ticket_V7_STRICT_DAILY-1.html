@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CD MBZ Football Smart Ticket V7</title>
+<style>
+:root{--bg:#07090d;--card:#10141b;--card2:#151b24;--text:#f5f7fa;--muted:#9aa6b5;--line:#28313d;--gold:#f5c542;--green:#36d399;--red:#ff6678;--blue:#62a8ff}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#07090d,#0c1118);color:var(--text);font-family:Arial,sans-serif}
+.wrap{max-width:1100px;margin:auto;padding:18px}.hero{padding:22px 0 10px}.hero h1{margin:0 0 8px;font-size:28px}.hero p{margin:0;color:var(--muted);line-height:1.5}
+.badge{display:inline-block;padding:6px 10px;border:1px solid #5d4b12;background:#171307;color:var(--gold);border-radius:999px;font-size:12px;font-weight:700;margin:8px 0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0;box-shadow:0 10px 28px #0005}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:700}
+input,select,button{width:100%;border-radius:10px;border:1px solid var(--line);background:#0b0f15;color:var(--text);padding:12px;font-size:14px}
+button{background:var(--gold);color:#111;border:0;font-weight:900;cursor:pointer;margin-top:14px}
+button:disabled{opacity:.55;cursor:not-allowed}
+.small{font-size:12px;color:var(--muted);line-height:1.45}.notice{padding:12px;border-radius:12px;background:#0b1017;border:1px solid var(--line);margin-top:10px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.stat{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:12px}.stat b{display:block;font-size:20px}.stat span{font-size:11px;color:var(--muted)}
+.sectionTitle{font-size:18px;margin:0 0 10px}.pick{border:1px solid var(--line);background:var(--card2);border-radius:13px;padding:13px;margin:9px 0}.pickTop{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.pick h3{margin:0 0 4px;font-size:15px}.pill{font-size:11px;font-weight:800;padding:5px 8px;border-radius:999px;background:#202936;color:#dbe5ef;white-space:nowrap}.pill.green{background:#0d2b22;color:#70f1bd}.pill.gold{background:#30270b;color:#ffd75b}.pill.red{background:#35141b;color:#ff8d9b}.row{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}.tag{font-size:11px;color:#c8d2de;background:#0b1017;border:1px solid #27313d;border-radius:8px;padding:5px 7px}.value{color:var(--green);font-weight:800}.muted{color:var(--muted)}.copy{background:#202936;color:#fff;border:1px solid var(--line);margin-top:10px}.danger{color:#ff9aaa}.ok{color:#73f0be}.hidden{display:none}.empty{padding:18px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:12px}
+pre{white-space:pre-wrap;word-break:break-word;background:#080c11;border:1px solid var(--line);padding:13px;border-radius:12px;color:#dfe7ef;font-size:13px;line-height:1.5}
+@media(max-width:700px){.grid{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}.hero h1{font-size:23px}}
+</style>
+
+<style id="v7-day-ticket-style">
+.day-ticket-btn{border:1px solid #555;background:#191919;color:#fff;padding:10px 12px;border-radius:10px;font-weight:800;cursor:pointer}
+.day-ticket-btn.active{outline:2px solid #fff;background:#292929}
+</style>
+</head>
+<body>
+<section id="dayTicketControls" style="margin:16px 0;padding:14px;border:1px solid #333;border-radius:14px;background:#111">
+  <div style="font-weight:800;font-size:16px;margin-bottom:10px">🎯 PREDICTION DAY</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <button type="button" class="day-ticket-btn active" data-day="today">🎯 TODAY'S TICKET</button>
+    <button type="button" class="day-ticket-btn" data-day="tomorrow">📅 TOMORROW'S TICKET</button>
+    <button type="button" class="day-ticket-btn" data-day="both">🤖 BEST OF BOTH DAYS</button>
+  </div>
+  <div id="dayTicketStatus" style="margin-top:10px;font-size:13px;opacity:.85">Showing today's predictions only.</div>
+</section>
+
+<div class="wrap">
+  <div class="hero">
+    <div class="badge">TODAY / TOMORROW SEPARATE & ALL MARKETS AUTO PICK</div>
+    <h1>⚽ CD MBZ Football Smart Ticket V7</h1>
+    <p>Market-based football analysis using bookmaker odds. V7 evaluates every supported market returned by your Odds API feed and does not invent unavailable odds.</p>
+  </div>
+
+  <div class="card">
+    <div class="grid">
+      <div><label>Odds API Key</label><input id="apiKey" type="password" placeholder="Paste your Odds API key"></div>
+      <div><label>Scan Leagues</label><select id="leagueMode"><option value="top6">TOP 6 — EPL, UCL, La Liga, Serie A, Bundesliga, Ligue 1</option><option value="all">ALL SUPPORTED SOCCER LEAGUES</option></select></div>
+      <div><label>Bookmaker Region</label><select id="region"><option value="eu">Europe</option><option value="uk">UK</option><option value="us">USA</option><option value="au">Australia</option></select></div>
+      <div><label>Strategy</label><select id="strategy"><option value="balanced">BALANCED</option><option value="safer">SAFER</option><option value="return">HIGHER RETURN</option></select></div>
+      <div><label>Target Combined Odds</label><select id="target"><option value="20">20</option><option value="50">50</option><option value="100">100</option></select></div>
+      <div><label>Maximum Odds Per Pick</label><select id="maxOdd"><option value="1.80">1.80</option><option value="2.20">2.20</option><option value="2.50">2.50</option><option value="3.00">3.00</option><option value="3.50">3.50</option><option value="5.00">5.00</option></select></div>
+      <div><label>Minimum Consensus Probability</label><select id="minProb"><option value="55">55%</option><option value="50">50%</option><option value="45">45%</option><option value="40">40%</option><option value="35">35%</option></select></div>
+      <div><label>Stake (optional)</label><input id="stake" type="number" min="0" step="100" placeholder="e.g. 2000"></div>
+    </div>
+    <div class="notice small">
+      <b>V7 market coverage:</b> Match Result, Draw No Bet, BTTS, Totals, Spreads/Handicap, Team Totals, Alternate Totals, Alternate Spreads, Alternate Team Totals, plus other soccer markets when the API exposes them. Double Chance and player/corners/cards markets are shown only when your current feed actually returns them.
+    </div>
+    <button id="run">🤖 RUN V7 STRICT ALL-MARKETS PREDICTION</button>
+    <div id="status" class="small" style="margin-top:10px"></div>
+  </div>
+
+  <div id="results" class="hidden">
+    <div class="card">
+      <div class="stats">
+        <div class="stat"><b id="sMatches">0</b><span>Matches</span></div>
+        <div class="stat"><b id="sMarkets">0</b><span>Market candidates</span></div>
+        <div class="stat"><b id="sBooks">0</b><span>Best book support</span></div>
+        <div class="stat"><b id="sValue">0</b><span>Positive-value picks</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="sectionTitle">🔥 STRONGEST OPPORTUNITIES BY MARKET</h2>
+      <div id="byMarket"></div>
+    </div>
+
+    <div class="card">
+      <h2 class="sectionTitle">🏆 TOP OVERALL OPPORTUNITIES</h2>
+      <div id="top"></div>
+    </div>
+
+    <div class="card">
+      <h2 class="sectionTitle">🎯 AUTO-BUILT TICKET</h2>
+      <div id="ticket"></div>
+    </div>
+
+    <div class="card">
+      <h2 class="sectionTitle">📋 READY-TO-POST PREDICTION SHEET</h2>
+      <pre id="post"></pre>
+      <div class="btnRow"><button class="copy" id="copy">COPY PREDICTION SHEET</button><button class="copy betpawa" id="copyBetpawa">📋 COPY BETPAWA-READY BETSLIP</button></div><div class="small" style="margin-top:8px">BetPawa booking codes are generated by BetPawa itself. This button copies the current V7 selections in a compact format for quick betslip entry.</div>
+    </div>
+
+    <div class="card">
+      <h2 class="sectionTitle">⚠️ MARKET AVAILABILITY</h2>
+      <div id="availability"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const LEAGUES={
+  "soccer_epl":"EPL",
+  "soccer_uefa_champs_league":"UEFA Champions League",
+  "soccer_spain_la_liga":"La Liga",
+  "soccer_italy_serie_a":"Serie A",
+  "soccer_germany_bundesliga":"Bundesliga",
+  "soccer_france_ligue_one":"Ligue 1"
+};
+
+const FEATURED=["h2h","spreads","totals"];
+const EXTRA=["btts","draw_no_bet","team_totals","alternate_totals","alternate_spreads","alternate_team_totals",
+"double_chance","h2h_3_way","asian_handicap","eu_h2h","player_goal_scorer_anytime"];
+
+const MARKET_NAMES={
+ h2h:"Match Result", h2h_3_way:"Match Result (3-Way)", draw_no_bet:"Draw No Bet",
+ btts:"Both Teams To Score", totals:"Goals Over/Under", spreads:"Handicap / Spread",
+ team_totals:"Team Goals", alternate_totals:"Alternate Goal Lines",
+ alternate_spreads:"Alternate Handicaps", alternate_team_totals:"Alternate Team Goals",
+ double_chance:"Double Chance", asian_handicap:"Asian Handicap",
+ eu_h2h:"European Handicap", player_goal_scorer_anytime:"Anytime Goalscorer"
+};
+
+let allCandidates=[], allEvents=[], unavailable=new Set(), scannedLeagues=0, apiHeaders={};
+
+function $(id){return document.getElementById(id)}
+function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
+function pct(x){return (x*100).toFixed(1)+"%"}
+function dec(x){return Number(x).toFixed(2)}
+function todayKey(d){return new Date(d).toISOString().slice(0,10)}
+function dateKeyLocal(iso){
+  const d=new Date(iso);
+  if(Number.isNaN(d.getTime())) return "";
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+}
+function localDayKey(offset){
+  const d=new Date();
+  d.setHours(12,0,0,0);
+  d.setDate(d.getDate()+offset);
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+}
+function selectedDayKey(){
+  const mode=window.GOALGRID_V7_DAY||"today";
+  if(mode==="tomorrow") return [localDayKey(1)];
+  if(mode==="both") return [localDayKey(0),localDayKey(1)];
+  return [localDayKey(0)];
+}
+function inWindow(iso){
+  return selectedDayKey().includes(dateKeyLocal(iso));
+}
+function implied(price){return price>0?1/price:0}
+function normalize(outcomes){
+  const raw=outcomes.map(o=>({o,p:implied(o.price)})).filter(x=>x.p>0);
+  const sum=raw.reduce((a,x)=>a+x.p,0)||1;
+  return raw.map(x=>({o:x.o,p:x.p/sum}));
+}
+function marketLabel(key){return MARKET_NAMES[key]||key.replaceAll("_"," ")}
+function outcomeLabel(o){
+  let n=o.name||"";
+  if(o.description && o.description!==n) n+=" — "+o.description;
+  if(o.point!==undefined && o.point!==null) n+=" "+(o.point>0?"+":"")+o.point;
+  return n;
+}
+function cleanMarket(market){
+  const k=market.key||"";
+  return {
+    key:k, title:market.title||marketLabel(k),
+    outcomes:Array.isArray(market.outcomes)?market.outcomes:[]
+  };
+}
+function scoreCandidate(c){
+  const p=c.prob, v=c.value, books=c.books, odd=c.price;
+  let s=p*72 + Math.min(books,12)*1.6 + Math.max(-3,Math.min(5,v))*4;
+  if(c.spread!==undefined) s-=Math.min(12,c.spread*60);
+  if(odd>=1.25 && odd<=1.85) s+=4;
+  if(v>=0.03) s+=5;
+  if(books>=8) s+=4;
+  return Math.max(0,Math.min(100,s));
+}
+function makeCandidates(event, bookmakers){
+  const groups={};
+  for(const bm of bookmakers||[]){
+    for(const raw of bm.markets||[]){
+      const m=cleanMarket(raw);
+      if(!m.outcomes.length) continue;
+      const norm=normalize(m.outcomes);
+      for(const x of norm){
+        const key=m.key+"|"+(x.o.name||"")+"|"+(x.o.point??"")+"|"+(x.o.description??"");
+        if(!groups[key]) groups[key]={event,mkey:m.key,mTitle:m.title,selection:outcomeLabel(x.o),prices:[],probs:[]};
+        groups[key].prices.push({price:Number(x.o.price),book:bm.title||bm.key});
+        groups[key].probs.push(x.p);
+      }
+    }
+  }
+  return Object.values(groups).map(g=>{
+    const prices=g.prices.filter(x=>x.price>1);
+    if(!prices.length) return null;
+    prices.sort((a,b)=>b.price-a.price);
+    const best=prices[0], sortedP=[...g.probs].sort((a,b)=>a-b);
+    const median=sortedP.length%2?sortedP[(sortedP.length-1)/2]:(sortedP[sortedP.length/2-1]+sortedP[sortedP.length/2])/2;
+    const mean=sortedP.reduce((a,b)=>a+b,0)/(sortedP.length||1);
+    const spread=Math.max(...sortedP)-Math.min(...sortedP);
+    const value=median*best.price-1;
+    const c={
+      event:g.event,mkey:g.mkey,mTitle:g.mTitle,selection:g.selection,
+      price:best.price,book:best.book,books:prices.length,prob:median,meanProb:mean,spread,value,
+      score:0
+    };
+    c.score=scoreCandidate(c);
+    return c;
+  }).filter(Boolean);
+}
+
+async function getJSON(url){
+  const r=await fetch(url);
+  const text=await r.text();
+  if(!r.ok){
+    let msg=text; try{msg=JSON.parse(text).message||msg}catch{}
+    throw new Error(r.status+" — "+msg);
+  }
+  return {data:JSON.parse(text),headers:r.headers};
+}
+
+async function fetchFeatured(key, region, apiKey){
+  const u=`https://api.the-odds-api.com/v4/sports/${key}/odds/?regions=${encodeURIComponent(region)}&markets=${FEATURED.join(",")}&oddsFormat=decimal&apiKey=${encodeURIComponent(apiKey)}`;
+  return getJSON(u);
+}
+
+async function fetchExtra(event, region, apiKey){
+  const u=`https://api.the-odds-api.com/v4/sports/${event.sport_key}/events/${event.id}/odds?regions=${encodeURIComponent(region)}&markets=${EXTRA.join(",")}&oddsFormat=decimal&apiKey=${encodeURIComponent(apiKey)}`;
+  try{return await getJSON(u)}catch(e){unavailable.add("Some additional markets unavailable for "+event.home_team+" vs "+event.away_team);return {data:event,headers:null}}
+}
+
+function mergeBookmakers(featured, extra){
+  const map=new Map();
+  for(const bm of (featured.bookmakers||[])) map.set(bm.key,{...bm,markets:[...(bm.markets||[])]});
+  for(const bm of (extra.bookmakers||[])){
+    if(!map.has(bm.key)) map.set(bm.key,{...bm,markets:[...(bm.markets||[])]});
+    else{
+      const existing=map.get(bm.key);
+      for(const m of (bm.markets||[])){
+        if(!existing.markets.some(x=>x.key===m.key && JSON.stringify(x.outcomes)===JSON.stringify(m.outcomes))) existing.markets.push(m);
+      }
+    }
+  }
+  return [...map.values()];
+}
+
+function qualityGate(c){
+  const strategy=$("strategy").value, minP=Number($("minProb").value)/100, maxOdd=Number($("maxOdd").value);
+  if(c.price>maxOdd || c.prob<minP || c.books<3) return false;
+  // Reject selections where the bookmaker consensus is too dispersed.
+  if(c.spread!==undefined && c.spread>0.14) return false;
+  // For a serious public prediction sheet, require positive estimated value
+  // except when the user explicitly chooses HIGHER RETURN.
+  if(strategy!=="return" && c.value<0) return false;
+  if(strategy==="safer") return c.prob>=Math.max(minP,.60) && c.price<=1.85 && c.books>=5;
+  if(strategy==="return") return c.prob>=Math.max(minP,.45) && c.books>=3;
+  return c.prob>=Math.max(minP,.55) && c.books>=4;
+}
+function sortCandidates(a,b){
+  const va=(a.value>=0?10:0), vb=(b.value>=0?10:0);
+  return (b.score+vb)-(a.score+va);
+}
+function dedupe(cands){
+  const seen=new Set(), out=[];
+  for(const c of [...cands].sort(sortCandidates)){
+    const k=c.event.id+"|"+c.mkey+"|"+c.selection;
+    if(seen.has(k)) continue;
+    seen.add(k); out.push(c);
+  }
+  return out;
+}
+
+function renderPick(c, compact=false){
+  const v=(c.value*100).toFixed(1);
+  const cls=c.value>=0?"green":c.prob>=.60?"gold":"red";
+  return `<div class="pick">
+    <div class="pickTop"><div><h3>${esc(c.event.home_team)} vs ${esc(c.event.away_team)}</h3><div class="muted">${esc(c.mTitle)} → <b>${esc(c.selection)}</b></div></div><span class="pill ${cls}">${pct(c.prob)}</span></div>
+    <div class="row">
+      <span class="tag">Odds <b>${dec(c.price)}</b></span>
+      <span class="tag">Books <b>${c.books}</b></span>
+      <span class="tag">Score <b>${c.score.toFixed(0)}/100</b></span>
+      <span class="tag">Value <b class="${c.value>=0?"value":"danger"}">${v}%</b></span>
+      <span class="tag">Best: ${esc(c.book)}</span>
+    </div>
+  </div>`;
+}
+
+function buildTicket(cands){
+  const target=Number($("target").value), maxOdd=Number($("maxOdd").value), strategy=$("strategy").value;
+  const maxSel=strategy==="safer"?5:6;
+  const usedMatches=new Set(), usedLeagues=new Set(), picks=[];
+  let product=1;
+  const pool=[...cands].filter(c=>qualityGate(c) && c.value>=0).sort((a,b)=>{
+    const aBonus=(a.prob>=.60?5:0)+(a.books>=6?3:0);
+    const bBonus=(b.prob>=.60?5:0)+(b.books>=6?3:0);
+    return (b.score+bBonus)-(a.score+aBonus);
+  });
+  for(const c of pool){
+    if(picks.length>=maxSel) break;
+    if(c.price>maxOdd || usedMatches.has(c.event.id)) continue;
+    const league=c.event.leagueName||"";
+    if(usedLeagues.has(league) && picks.length<3) continue;
+    const next=product*c.price;
+    if(product<target && next>target*1.20) continue;
+    picks.push(c);
+    usedMatches.add(c.event.id);
+    if(league) usedLeagues.add(league);
+    product=next;
+    if(product>=target) break;
+  }
+  return {picks,product};
+}
+
+function betpawaText(ticket){
+  if(!ticket.picks.length) return `NO BET — V7 did not find enough qualifying evidence.`;
+  let t=`GOALGRID FOOTBALL TIPS — V7 — BETPAWA READY\n`;
+  t+=`Selections: ${ticket.picks.length} | V7 combined odds: ${dec(ticket.product)}\n\n`;
+  ticket.picks.forEach((c,i)=>{
+    t+=`${i+1}. ${c.event.home_team} vs ${c.event.away_team} — ${c.mTitle}: ${c.selection}\n`;
+  });
+  t+=`\nV7 reference odds: ${dec(ticket.product)}\n`;
+  t+=`NOTE: Check the current BetPawa market and odds before placing. BetPawa generates its own booking code after the selections are on the BetSlip.`;
+  return t;
+}
+
+function postText(ticket, cands){
+  const date=new Date().toLocaleDateString();
+  let t=`⚽ GOALGRID FOOTBALL TIPS — V7\n`;
+  t+=`📅 ${date}\n`;
+  t+=`🔎 DATE: SELECTED DAY | ALL SUPPORTED MARKETS\n\n`;
+  if(!ticket.picks.length) t+=`NO BET — not enough qualifying market opportunities under the selected filters.\n\n`;
+  else{
+    ticket.picks.forEach((c,i)=>t+=`${i+1}. ${c.event.home_team} vs ${c.event.away_team}\n   ${c.mTitle}: ${c.selection}\n   Odds: ${dec(c.price)} | Consensus: ${pct(c.prob)} | Value: ${(c.value*100).toFixed(1)}%\n`);
+    t+=`\n🎯 Combined odds: ${dec(ticket.product)}\n`;
+    const st=Number($("stake").value||0);
+    if(st>0) t+=`💰 Stake: ${st.toLocaleString()} | Gross return: ${(st*ticket.product).toLocaleString(undefined,{maximumFractionDigits:0})}\n`;
+  }
+  t+=`\n⚠️ Market-based analysis, not a guaranteed result. Odds move and markets can be correlated.`;
+  return t;
+}
+
+async function runScan(){
+  const apiKey=$("apiKey").value.trim();
+  const dayMode=window.GOALGRID_V7_DAY||"today";
+  const dayNames=dayMode==="today"?"TODAY":dayMode==="tomorrow"?"TOMORROW":"TODAY + TOMORROW";
+  if(!apiKey){$("status").innerHTML='<span class="danger">Paste your Odds API key first.</span>';return}
+  const region=$("region").value;
+  const mode=$("leagueMode").value;
+  const leagues=mode==="top6"?Object.entries(LEAGUES):Object.entries(LEAGUES);
+  $("run").disabled=true; $("results").classList.add("hidden");
+  allCandidates=[]; allEvents=[]; unavailable=new Set(); scannedLeagues=0;
+  $("status").textContent=`Starting V7 strict ${dayNames} scan…`;
+  let creditText="";
+  try{
+    for(const [key,name] of leagues){
+      $("status").textContent=`Scanning ${name}…`;
+      try{
+        const res=await fetchFeatured(key,region,apiKey);
+        scannedLeagues++;
+        if(res.headers){
+          const rem=res.headers.get("x-requests-remaining"), used=res.headers.get("x-requests-used");
+          if(rem) creditText=` | API credits remaining: ${rem}`;
+          apiHeaders={rem,used};
+        }
+        const events=(res.data||[]).filter(e=>inWindow(e.commence_time));
+        for(const e of events){
+          e.leagueName=name;
+          allEvents.push(e);
+          allCandidates.push(...makeCandidates(e,e.bookmakers||[]));
+        }
+        $("status").textContent=`${name}: ${events.length} ${dayNames} matches found${creditText}`;
+      }catch(e){
+        unavailable.add(name+": "+e.message);
+      }
+    }
+
+    // Extra market scan: one event request per match. This is intentionally separated
+    // because The Odds API documents that additional/non-featured markets are accessed
+    // through the event odds endpoint.
+    for(let i=0;i<allEvents.length;i++){
+      const e=allEvents[i];
+      $("status").textContent=`Scanning ${dayNames} extra markets ${i+1}/${allEvents.length}: ${e.home_team} vs ${e.away_team}${creditText}`;
+      const res=await fetchExtra(e,region,apiKey);
+      if(res.data && res.data.bookmakers){
+        allCandidates.push(...makeCandidates(e,mergeBookmakers(e,res.data.bookmakers)));
+      }
+      await new Promise(r=>setTimeout(r,60));
+    }
+
+    allCandidates=dedupe(allCandidates);
+    const qualified=allCandidates.filter(qualityGate).sort(sortCandidates);
+    const positive=allCandidates.filter(c=>c.value>=0).length;
+    const bestBooks=allCandidates.length?Math.max(...allCandidates.map(c=>c.books)):0;
+    $("sMatches").textContent=allEvents.length;
+    $("sMarkets").textContent=allCandidates.length;
+    $("sBooks").textContent=bestBooks;
+    $("sValue").textContent=positive;
+
+    const by={};
+    for(const c of qualified){if(!by[c.mkey])by[c.mkey]=[];by[c.mkey].push(c)}
+    const marketKeys=Object.keys(by).sort((a,b)=>by[b].length-by[a].length);
+    $("byMarket").innerHTML=marketKeys.length?marketKeys.map(k=>{
+      const arr=by[k].sort(sortCandidates).slice(0,3);
+      return `<div class="notice"><b>${esc(marketLabel(k))}</b>${arr.map(c=>renderPick(c,true)).join("")}</div>`;
+    }).join(""):'<div class="empty">No market passed the selected quality filters.</div>';
+
+    $("top").innerHTML=qualified.slice(0,20).map(c=>renderPick(c)).join("")||'<div class="empty">No qualifying opportunities. Lower the probability filter or choose HIGHER RETURN if you want a wider search.</div>';
+
+    const ticket=buildTicket(qualified);
+    if(ticket.picks.length){
+      $("ticket").innerHTML=`<div class="notice"><b>Combined odds: ${dec(ticket.product)}</b><div class="small">${ticket.picks.length} selections • one selection per match to reduce obvious correlation.</div></div>${ticket.picks.map(c=>renderPick(c)).join("")}`;
+    }else $("ticket").innerHTML='<div class="empty">NO BET. V7 will not add weak legs just to manufacture the target odds.</div>';
+
+    $("post").textContent=postText(ticket,qualified);
+    window.currentV6Ticket=ticket;
+
+    const marketSeen=new Set(allCandidates.map(c=>c.mkey));
+    const requested=[...new Set([...FEATURED,...EXTRA])];
+    const missing=requested.filter(k=>!marketSeen.has(k));
+    let av=`<div class="small"><b>Returned markets:</b> ${[...marketSeen].map(k=>esc(marketLabel(k))).join(", ")||"none"}</div>`;
+    if(missing.length) av+=`<div class="small" style="margin-top:8px"><b>Not returned in this scan:</b> ${missing.map(k=>esc(marketLabel(k))).join(", ")}</div>`;
+    if(unavailable.size) av+=`<div class="small danger" style="margin-top:8px"><b>Feed notes:</b><br>${[...unavailable].map(esc).join("<br>")}</div>`;
+    av+=`<div class="small" style="margin-top:8px">The API does not guarantee every market for every bookmaker/event. V7 only displays markets actually returned by your feed.</div>`;
+    $("availability").innerHTML=av;
+
+    $("results").classList.remove("hidden");
+    $("status").innerHTML=`<span class="ok">V7 scan complete:</span> ${allEvents.length} matches, ${allCandidates.length} market candidates, ${qualified.length} qualifying picks.${creditText}`;
+    window.scrollTo({top:$("results").offsetTop-10,behavior:"smooth"});
+  }catch(e){
+    $("status").innerHTML=`<span class="danger">Scan error: ${esc(e.message)}</span>`;
+  }finally{$("run").disabled=false}
+}
+
+$("run").addEventListener("click",runScan);
+$("copyBetpawa").addEventListener("click",async()=>{
+  try{
+    const t=betpawaText(window.currentV6Ticket||{picks:[],product:0});
+    await navigator.clipboard.writeText(t);
+    $("copyBetpawa").textContent="COPIED ✓";
+    setTimeout(()=>$("copyBetpawa").textContent="📋 COPY BETPAWA-READY BETSLIP",1800);
+  }catch{alert("Copy failed. Long-press the text and copy it manually.")}
+});
+
+$("copy").addEventListener("click",async()=>{
+  try{await navigator.clipboard.writeText($("post").textContent);$("copy").textContent="COPIED ✓";setTimeout(()=>$("copy").textContent="COPY PREDICTION SHEET",1600)}
+  catch{alert("Copy failed. Long-press the prediction text and copy it manually.")}
+});
+</script>
+
+<script id="v7-day-ticket-engine">
+(function(){
+  let selectedDay=localStorage.getItem("goalgird_v7_day")||"today";
+  window.GOALGRID_V7_DAY=selectedDay;
+
+  function dayText(){
+    if(selectedDay==="tomorrow") return "Showing TOMORROW'S predictions only • "+localDayKey(1);
+    if(selectedDay==="both") return "Showing the strongest qualifying opportunities across TODAY + TOMORROW.";
+    return "Showing TODAY'S predictions only • "+localDayKey(0);
+  }
+  function refreshButtons(){
+    document.querySelectorAll(".day-ticket-btn").forEach(b=>b.classList.toggle("active",b.dataset.day===selectedDay));
+    const s=document.getElementById("dayTicketStatus"); if(s) s.textContent=dayText();
+  }
+  document.addEventListener("click",function(e){
+    const b=e.target.closest(".day-ticket-btn"); if(!b) return;
+    selectedDay=b.dataset.day;
+    window.GOALGRID_V7_DAY=selectedDay;
+    localStorage.setItem("goalgird_v7_day",selectedDay);
+    refreshButtons();
+    const r=document.getElementById("results");
+    if(r) r.classList.add("hidden");
+    const st=document.getElementById("status");
+    if(st) st.textContent=dayText()+" — press RUN V7 to scan this day.";
+  });
+  window.GOALGRID_V7={getDay:()=>selectedDay,setDay:d=>{selectedDay=d;window.GOALGRID_V7_DAY=d;localStorage.setItem("goalgird_v7_day",d);refreshButtons();}};
+  refreshButtons();
+})();
+</script>
+</body>
+</html>
